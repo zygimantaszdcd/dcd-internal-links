@@ -25,6 +25,12 @@ jobs:
         run: |
           pip install requests
       
+      - name: Test API connection
+        env:
+          DECODO_API_TOKEN: ${{ secrets.DECODO_API_TOKEN }}
+        run: |
+          python scripts/test_api.py
+      
       - name: Run link generator
         env:
           DECODO_API_TOKEN: ${{ secrets.DECODO_API_TOKEN }}
