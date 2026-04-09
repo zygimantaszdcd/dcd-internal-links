@@ -119,39 +119,40 @@ def parse_sitemap(xml_content: str) -> list[str]:
     return urls
 
 
+def fetch_sitemap_direct(url: str) -> str:
+    """Fetch sitemap directly (no need for Decodo - it's public XML)."""
+    try:
+        response = requests.get(url, timeout=30, headers={
+            "User-Agent": "Mozilla/5.0 (compatible; InternalLinkBot/1.0)"
+        })
+        response.raise_for_status()
+        return response.text
+    except requests.RequestException as e:
+        print(f"  Error fetching sitemap: {e}")
+        return ""
+
+
 def main():
     print(f"Starting internal links generation at {datetime.now(timezone.utc).isoformat()}")
     
     token = get_api_token()
     print(f"Token loaded (length: {len(token)} chars)")
     
-    # Step 1: Fetch sitemap
+    # Step 1: Fetch sitemap directly (public XML, no scraping needed)
     print(f"\n1. Fetching sitemap: {SITEMAP_URL}")
-    sitemap_response = scrape_url(SITEMAP_URL, token)
-    
-    if not sitemap_response:
-        raise RuntimeError("Failed to fetch sitemap - check API response above")
-    
-    if "results" not in sitemap_response:
-        print(f"Unexpected response structure: {json.dumps(sitemap_response, indent=2)[:1000]}")
-        raise RuntimeError("Failed to fetch sitemap - unexpected response structure")
-    
-    if not sitemap_response["results"]:
-        print("Empty results array in response")
-        raise RuntimeError("Failed to fetch sitemap - empty results")
-    
-    sitemap_content = sitemap_response["results"][0].get("content", "")
+    sitemap_content = fetch_sitemap_direct(SITEMAP_URL)
     
     if not sitemap_content:
-        print(f"No content in response. Full response: {json.dumps(sitemap_response, indent=2)[:1000]}")
-        raise RuntimeError("Failed to fetch sitemap - no content")
+        raise RuntimeError("Failed to fetch sitemap")
+    
+    print(f"   Sitemap fetched ({len(sitemap_content)} bytes)")
     
     urls = parse_sitemap(sitemap_content)
     print(f"   Found {len(urls)} URLs in sitemap")
     
     if not urls:
         print(f"   Sitemap content preview: {sitemap_content[:500]}")
-        raise RuntimeError("No URLs found in sitemap")
+        raise RuntimeError("No URLs found in sitemap - check sitemap format")
     
     # Step 2: Scrape each URL
     print(f"\n2. Scraping pages for titles and H1s...")
