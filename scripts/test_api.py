@@ -9,7 +9,7 @@ import requests
 import json
 
 DECODO_API_URL = "https://scraper-api.decodo.com/v2/scrape"
-TEST_URL = "https://ip.decodo.com"  # Simple test endpoint from Decodo docs
+TEST_URL = "https://decodo.com/"  # Test with homepage
 
 def main():
     token = os.environ.get("DECODO_API_TOKEN")
